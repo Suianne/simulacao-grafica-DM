@@ -343,27 +343,27 @@ def plot_fase_3d(res, args, nome):
     return fig    
     
 def salvar_foco(res, args, nome_arquivo_saida, dpi=200):
-    """Salva uma imagem individual contendo apenas o mapa de intensidade 2D
-    do feixe no plano focal para o espelho deformado."""
-    fig, ax = plt.subplots(figsize=(6, 5), facecolor="#101010")
+    # Define o tamanho da figura proporcional ao formato da matriz de dados
+    ny, nx = res["I_def"].shape
+    fig = plt.figure(figsize=(nx / 100, ny / 100), dpi=dpi)
     
-    xf = res["xf"]
-    ext = [xf[0] * 1e6, xf[-1] * 1e6, xf[0] * 1e6, xf[-1] * 1e6]
+    # Ocupa 100% da figura, sem eixos/margens
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.axis("off")
     
-    im = ax.imshow(res["I_def"], extent=ext, origin="lower", cmap=CMAP_LASER, vmin=0, vmax=1)
+    # Plota apenas a matriz de imagem
+    ax.imshow(res["I_def"], origin="lower", cmap=CMAP_LASER, vmin=0, vmax=1)
     
-    ax.set_xlabel("x (µm)", color=TXT)
-    ax.set_ylabel("y (µm)", color=TXT)
-    ax.set_title("Plano Focal (Espelho Deformado)", color=TXT, fontsize=11)
-    
-    estilo_escuro(ax)
-    barra_cores(fig, im, ax, "Intensidade (I/I$_{0,\\,ref}$)")
-    
-    fig.tight_layout()
-    fig.savefig(nome_arquivo_saida, dpi=dpi, facecolor=fig.get_facecolor(), bbox_inches="tight")
+    # Salva recortando exatamente os limites da imagem
+    fig.savefig(
+        nome_arquivo_saida,
+        dpi=dpi,
+        bbox_inches="tight",
+        pad_inches=0,
+        facecolor="black"
+    )
     plt.close(fig)
-    
-    print(f"Imagem do plano focal salva em: {nome_arquivo_saida}")
+    print(f"Imagem recortada do plano focal salva em: {nome_arquivo_saida}")
 
 # ============================ PROGRAMA ======================================
 def main():
@@ -393,8 +393,8 @@ def main():
     print(f"Figura salva em {saida}")
     plt.show()
     
-    saida_foco = Path(CAMINHO_CSV).with_name(Path(CAMINHO_CSV).stem + "_plano_focal.png")
-    salvar_foco(res, args, saida_foco)
+    saida_foco= Path(CAMINHO_CSV).with_name(Path(CAMINHO_CSV).stem + "_plano_focal_crop.png")
+    salvar_foco(res, saida_foco, "saida.png")
     
 
 if __name__ == "__main__":
